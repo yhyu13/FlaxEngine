@@ -25,19 +25,40 @@ public:
     ScopedZone& operator=( const ScopedZone& ) = delete;
     ScopedZone& operator=( ScopedZone&& ) = delete;
 
-    static bool Begin( const SourceLocationData* srcloc, bool is_active = true )
+    static bool Begin( const SourceLocationData* srcloc, int depth = 0, bool is_active = true )
     {
-        if( !GetProfiler().IsConnected() ) return false;
-        TracyQueuePrepare( QueueType::ZoneBegin );
-        MemWrite( &item->zoneBegin.time, Profiler::GetTime() );
-        MemWrite( &item->zoneBegin.srcloc, (uint64_t)srcloc );
-        TracyQueueCommit( zoneBeginThread );
+#ifdef TRACY_ON_DEMAND
+        bool m_active( is_active && GetProfiler().IsConnected() );
+#else
+        bool m_active( is_active )
+#endif
+        if( !m_active ) return false;
+        if (depth > 0)
+        {
+            TracyQueuePrepare( QueueType::ZoneBegin );
+            MemWrite( &item->zoneBegin.time, Profiler::GetTime() );
+            MemWrite( &item->zoneBegin.srcloc, (uint64_t)srcloc );
+            TracyQueueCommit( zoneBeginThread );
+        }
+        else
+        {
+            GetProfiler().SendCallstack( 8 );
+            TracyQueuePrepare( QueueType::ZoneBeginCallstack );
+            MemWrite( &item->zoneBegin.time, Profiler::GetTime() );
+            MemWrite( &item->zoneBegin.srcloc, (uint64_t)srcloc );
+            TracyQueueCommit( zoneBeginThread );
+        }
         return true;
     }
 
     static void End()
     {
-        if( !GetProfiler().IsConnected() ) return;
+#ifdef TRACY_ON_DEMAND
+        bool m_active( true && GetProfiler().IsConnected() );
+#else
+        bool m_active( true );
+#endif
+        if( !m_active ) return;
         TracyQueuePrepare( QueueType::ZoneEnd );
         MemWrite( &item->zoneEnd.time, Profiler::GetTime() );
         TracyQueueCommit( zoneEndThread );

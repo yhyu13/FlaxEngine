@@ -298,7 +298,7 @@ void DbgHelpInit()
     _SymGetLineFromInlineContext = (t_SymGetLineFromInlineContext)GetProcAddress(GetModuleHandleA("dbghelp.dll"), "SymGetLineFromInlineContext");
 
 #ifdef TRACY_DBGHELP_LOCK
-    //DBGHELP_INIT; YuHang, recursive stack bug!, comment out this line
+    DBGHELP_INIT;
     DBGHELP_LOCK;
 #endif
 

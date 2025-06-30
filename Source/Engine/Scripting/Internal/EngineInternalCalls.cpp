@@ -145,8 +145,7 @@ DEFINE_INTERNAL_CALL(void) ProfilerInternal_BeginEvent(MString* nameObj)
         srcLoc->line = 0;
         srcLoc->color = 0;
     }
-    //static constexpr tracy::SourceLocationData tracySrcLoc{ nullptr, __FUNCTION__, __FILE__, (uint32_t)__LINE__, 0 };
-    const bool tracyActive = tracy::ScopedZone::Begin(srcLoc);
+    const bool tracyActive = tracy::ScopedZone::Begin(srcLoc, 8);
     if (tracyActive)
         ManagedEventsCount.Get()++;
 #endif

@@ -41,17 +41,17 @@ void* WindowsPlatform::Instance = nullptr;
 extern "C" {
 static HANDLE dbgHelpLock;
 
-void DbgHelpInit()
+void DbgHelpMyInit()
 {
     dbgHelpLock = CreateMutexW(nullptr, FALSE, nullptr);
 }
 
-void DbgHelpLock()
+void DbgHelpMyLock()
 {
     WaitForSingleObject(dbgHelpLock, INFINITE);
 }
 
-void DbgHelpUnlock()
+void DbgHelpMyUnlock()
 {
     ReleaseMutex(dbgHelpLock);
 }
@@ -543,7 +543,7 @@ void WindowsPlatform::PreInit(void* hInstance)
 
 #if CRASH_LOG_ENABLE
     TCHAR buffer[MAX_PATH] = { 0 };
-    DbgHelpLock();
+    DbgHelpMyLock();
     if (::GetModuleFileNameW(::GetModuleHandleW(nullptr), buffer, MAX_PATH))
         SymbolsPath.Add(StringUtils::GetDirectoryName(buffer));
     if (::GetEnvironmentVariableW(TEXT("_NT_SYMBOL_PATH"), buffer, MAX_PATH))
@@ -552,7 +552,7 @@ void WindowsPlatform::PreInit(void* hInstance)
     options |= SYMOPT_LOAD_LINES | SYMOPT_FAIL_CRITICAL_ERRORS | SYMOPT_DEFERRED_LOADS | SYMOPT_EXACT_SYMBOLS;
     SymSetOptions(options);
     OnSymbolsPathModified();
-    DbgHelpUnlock();
+    DbgHelpMyUnlock();
 #endif
 
     GetWindowsVersion(WindowsName, VersionMajor, VersionMinor, VersionBuild);
@@ -728,7 +728,7 @@ void WindowsPlatform::BeforeExit()
 void WindowsPlatform::Exit()
 {
 #if CRASH_LOG_ENABLE
-    DbgHelpLock();
+    DbgHelpMyLock();
 #if !TRACY_ENABLE
     if (SymInitialized)
     {
@@ -737,7 +737,7 @@ void WindowsPlatform::Exit()
     }
 #endif
     SymbolsPath.Resize(0);
-    DbgHelpUnlock();
+    DbgHelpMyUnlock();
 #endif
 
     // Unregister app class
@@ -1227,14 +1227,14 @@ void* WindowsPlatform::LoadLibrary(const Char* filename)
 
 #if CRASH_LOG_ENABLE
     // Refresh modules info during next stack trace collecting to have valid debug symbols information
-    DbgHelpLock();
+    DbgHelpMyLock();
     if (folder.HasChars() && !SymbolsPath.Contains(folder))
     {
         SymbolsPath.Add(folder);
         SymbolsPath.Last().Replace('/', '\\');
         OnSymbolsPathModified();
     }
-    DbgHelpUnlock();
+    DbgHelpMyUnlock();
 #endif
 
     return handle;
@@ -1245,7 +1245,7 @@ void* WindowsPlatform::LoadLibrary(const Char* filename)
 Array<PlatformBase::StackFrame> WindowsPlatform::GetStackFrames(int32 skipCount, int32 maxDepth, void* context)
 {
     Array<StackFrame> result;
-    DbgHelpLock();
+    DbgHelpMyLock();
 
     // Initialize
     HANDLE process = GetCurrentProcess();
@@ -1369,7 +1369,7 @@ Array<PlatformBase::StackFrame> WindowsPlatform::GetStackFrames(int32 skipCount,
         }
     }
 
-    DbgHelpUnlock();
+    DbgHelpMyUnlock();
     return result;
 }
 

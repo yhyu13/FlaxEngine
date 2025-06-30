@@ -47,10 +47,10 @@ public class tracy : ThirdPartyModule
         switch (options.Platform.Target)
         {
         case TargetPlatform.Windows:
-            options.PrivateDefinitions.Add("TRACY_DBGHELP_LOCK=DbgHelp");
+            options.PrivateDefinitions.Add("TRACY_DBGHELP_LOCK=DbgHelpMy"); // YuHang : change DbgHelp to DbgHelpMy to avoid name collision
             break;
         case TargetPlatform.Switch:
-            options.PrivateDefinitions.Add("TRACY_USE_MALLOC");
+            options.PrivateDefinitions.Add("TRACY_USE_MALLOC"); // YuHang : TRACY_USE_MALLOC macro not exists?
             options.PrivateDefinitions.Add("TRACY_ONLY_IPV4");
             break;
         }
